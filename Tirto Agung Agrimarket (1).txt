@@ -1,0 +1,1501 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { 
+  ShoppingBag, Search, Filter, CheckCircle2, ShieldCheck, User, Plus, 
+  Trash2, X, ChevronRight, RefreshCw, LogOut, LogIn, Store, MapPin, 
+  Tag, TrendingUp, Coins, Printer, Eye, Heart, Truck, Package, 
+  FileText, ArrowRight, Star, AlertCircle, Scale, Check, ChevronDown,
+  Layers, ShoppingCart, UserCheck, ArrowUpRight, Sparkles, SlidersHorizontal
+} from 'lucide-react';
+
+const SafeImage = ({ src, alt, className, category }) => {
+  const [error, setError] = useState(false);
+
+  const getCategoryFallback = () => {
+    switch (category) {
+      case 'sembako': return 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&auto=format&fit=crop&q=80';
+      case 'sayur': return 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80';
+      case 'protein': return 'https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=600&auto=format&fit=crop&q=80';
+      case 'buah': return 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600&auto=format&fit=crop&q=80';
+      case 'ternak': return 'https://images.unsplash.com/photo-1546445317-29f4545f9d52?w=600&auto=format&fit=crop&q=80';
+      case 'pakan': return 'https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=600&auto=format&fit=crop&q=80';
+      case 'pupuk': return 'https://images.unsplash.com/photo-1628352081506-83c43123ed6d?w=600&auto=format&fit=crop&q=80';
+      case 'alat': return 'https://images.unsplash.com/photo-1592417817098-8f3d6ef23a80?w=600&auto=format&fit=crop&q=80';
+      default: return 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=600&auto=format&fit=crop&q=80';
+    }
+  };
+
+  return (
+    <img
+      src={error || !src ? getCategoryFallback() : src}
+      alt={alt || "Komoditas Tirto Agung"}
+      className={className}
+      onError={() => setError(true)}
+      loading="lazy"
+    />
+  );
+};
+
+const INITIAL_ACCOUNTS = [
+  {
+    id: 'rio-kediri',
+    name: 'Mohammad Rio',
+    role: 'Pembeli',
+    roleBadge: 'Pembeli Utama',
+    email: 'mohammad.rio@kediri.id',
+    phone: '0812-3456-7890',
+    location: 'Jl. Dhoho No. 45, Kota Kediri',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+    isVerified: true,
+    balance: 12500000,
+    model: 'Marketplace'
+  },
+  {
+    id: 'sugeng-pare',
+    name: 'Pak Sugeng (Poktan Pare)',
+    role: 'Petani',
+    roleBadge: 'Pemasok Terverifikasi',
+    email: 'sugeng.pare@tirtoagung.id',
+    phone: '0857-1122-3344',
+    location: 'Kec. Pare, Kab. Kediri',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    isVerified: true,
+    balance: 8450000,
+    model: 'Marketplace'
+  },
+  {
+    id: 'siti-grosir',
+    name: 'Hj. Siti Rahmah',
+    role: 'Pembeli',
+    roleBadge: 'Tengkulak / Grosir',
+    email: 'siti.grosirkediri@gmail.com',
+    phone: '0813-9876-5432',
+    location: 'Pasar Grosir Ngronggo, Kota Kediri',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    isVerified: true,
+    balance: 45000000,
+    model: 'Marketplace'
+  },
+  {
+    id: 'tirto-direct',
+    name: 'Tirto Agung Direct (B2B)',
+    role: 'Distributor',
+    roleBadge: 'Distributor Resmi',
+    email: 'b2b@tirtoagung.id',
+    phone: '0354-688990',
+    location: 'Kawasan Agrobisnis Semen, Kediri',
+    avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80',
+    isVerified: true,
+    balance: 180000000,
+    model: 'Distributor'
+  }
+];
+
+const GENERATE_100_ITEMS = () => {
+  const items = [];
+
+  // Beras & Sembako (1-20)
+  const sembako = [
+    { name: 'Beras Pandan Wangi Super 10kg', price: 155000, unit: 'Karung 10kg', seller: 'Poktan Pare Kediri', location: 'Pare, Kediri', rating: 4.9, sold: 420 },
+    { name: 'Beras Menthik Wangi Organik 5kg', price: 82000, unit: 'Bag 5kg', seller: 'Tirto Agung Direct', location: 'Semen, Kediri', rating: 4.8, sold: 310 },
+    { name: 'Beras Merah Organik Ngancar 2kg', price: 38000, unit: 'Pack 2kg', seller: 'Tani Makmur Ngancar', location: 'Ngancar, Kediri', rating: 4.9, sold: 185 },
+    { name: 'Beras Hitam Pecah Kulit 1kg', price: 24000, unit: 'Kg', seller: 'Pak Sugeng (Poktan Pare)', location: 'Pare, Kediri', rating: 4.7, sold: 90 },
+    { name: 'Gula Pasir Tebu Asli Kediri 1kg', price: 16500, unit: 'Kg', seller: 'PG Pesantren Baru', location: 'Kota Kediri', rating: 4.9, sold: 1200 },
+    { name: 'Murni Minyak Goreng Kelapa 2L', price: 36000, unit: 'Pouch 2L', seller: 'Grosir Dhoho', location: 'Kota Kediri', rating: 4.8, sold: 850 },
+    { name: 'Minyak Goreng Sawit Resto 1L', price: 15500, unit: 'Botol 1L', seller: 'Tirto Agung Direct', location: 'Kota Kediri', rating: 4.7, sold: 2100 },
+    { name: 'Tepung Terigu Cakra Kembar 1kg', price: 12500, unit: 'Kg', seller: 'Siti Grosir Kediri', location: 'Ngronggo, Kediri', rating: 4.8, sold: 640 },
+    { name: 'Tepung Tapioka Cap Gunung 1kg', price: 11000, unit: 'Kg', seller: 'Lapak Pak Sugeng', location: 'Pare, Kediri', rating: 4.6, sold: 410 },
+    { name: 'Garam Beryodium Gurah 500g', price: 4500, unit: 'Pack 500g', seller: 'Tani Gurah', location: 'Gurah, Kediri', rating: 4.8, sold: 1500 },
+    { name: 'Gula Aren Murni Mrican 500g', price: 18000, unit: 'Pack 500g', seller: 'Mrican Craft', location: 'Mrican, Kediri', rating: 4.9, sold: 320 },
+    { name: 'Jagung Pipil Kering Super 1kg', price: 7500, unit: 'Kg', seller: 'Pak Sugeng (Poktan Pare)', location: 'Pare, Kediri', rating: 4.8, sold: 980 },
+    { name: 'Singkong Mukibat Segar 1kg', price: 4500, unit: 'Kg', seller: 'Tani Wates Kediri', location: 'Wates, Kediri', rating: 4.7, sold: 540 },
+    { name: 'Ubi Cilembu Manis Kelud 1kg', price: 12000, unit: 'Kg', seller: 'Tani Ngancar', location: 'Ngancar, Kediri', rating: 4.9, sold: 620 },
+    { name: 'Ketan Putih Super Gurah 1kg', price: 18500, unit: 'Kg', seller: 'Poktan Gurah', location: 'Gurah, Kediri', rating: 4.8, sold: 230 },
+    { name: 'Ketan Hitam Lokal Kediri 1kg', price: 22000, unit: 'Kg', seller: 'Poktan Gurah', location: 'Gurah, Kediri', rating: 4.7, sold: 140 },
+    { name: 'Kacang Hijau Organik 1kg', price: 26000, unit: 'Kg', seller: 'Siti Grosir Kediri', location: 'Kota Kediri', rating: 4.8, sold: 310 },
+    { name: 'Kacang Tanah Kupas Nganjuk 1kg', price: 32000, unit: 'Kg', seller: 'Tani Nganjuk-Kediri', location: 'Kras, Kediri', rating: 4.9, sold: 450 },
+    { name: 'Kacang Kedelai Lokal Murni 1kg', price: 13500, unit: 'Kg', seller: 'Poktan Tempe Kediri', location: 'Kota Kediri', rating: 4.8, sold: 880 },
+    { name: 'Bihun Beras Super Kediri 500g', price: 9500, unit: 'Pack 500g', seller: 'Grosir Dhoho', location: 'Kota Kediri', rating: 4.7, sold: 390 }
+  ];
+
+  sembako.forEach((s, idx) => {
+    items.push({
+      id: `prod-${idx + 1}`,
+      name: s.name,
+      category: 'sembako',
+      categoryLabel: 'Beras & Sembako',
+      price: s.price,
+      unit: s.unit,
+      seller: s.seller,
+      location: s.location,
+      rating: s.rating,
+      sold: s.sold,
+      stock: Math.floor(Math.random() * 80) + 20,
+      description: `Komoditas ${s.name} kualitas terbaik langsung dari jaringan mitra produsen lokal wilayah Kediri dan sekitarnya.`,
+      image: `https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&auto=format&fit=crop&q=80`
+    });
+  });
+
+  const sayur = [
+    { name: 'Cabai Rawit Merah Pare Super 1kg', price: 42000, unit: 'Kg', seller: 'Pak Sugeng (Poktan Pare)', location: 'Pare, Kediri' },
+    { name: 'Cabai Keriting Merah Segar 1kg', price: 35000, unit: 'Kg', seller: 'Pak Sugeng (Poktan Pare)', location: 'Pare, Kediri' },
+    { name: 'Bawang Merah Nganjuk-Kediri 1kg', price: 31000, unit: 'Kg', seller: 'Poktan Kras', location: 'Kras, Kediri' },
+    { name: 'Bawang Putih Honan Super 1kg', price: 38000, unit: 'Kg', seller: 'Siti Grosir Kediri', location: 'Kota Kediri' },
+    { name: 'Tomat Buah Ngancar Segar 1kg', price: 11000, unit: 'Kg', seller: 'Tani Ngancar', location: 'Ngancar, Kediri' },
+    { name: 'Bayam Hijau Organik 500g', price: 5000, unit: 'Ikat 500g', seller: 'Tani Hidroponik Plosoklaten', location: 'Plosoklaten, Kediri' },
+    { name: 'Kangkung Cabut Segar 500g', price: 4500, unit: 'Ikat 500g', seller: 'Tani Plosoklaten', location: 'Plosoklaten, Kediri' },
+    { name: 'Pakcoy Hidroponik Premium 500g', price: 8500, unit: 'Pack 500g', seller: 'Kediri Green Hydro', location: 'Kota Kediri' },
+    { name: 'Terong Ungu Segar 1kg', price: 8000, unit: 'Kg', seller: 'Pak Sugeng (Poktan Pare)', location: 'Pare, Kediri' },
+    { name: 'Buncis Super Ngancar 1kg', price: 12000, unit: 'Kg', seller: 'Tani Ngancar', location: 'Ngancar, Kediri' },
+    { name: 'Jahe Merah Kediri Grade A 1kg', price: 28000, unit: 'Kg', seller: 'Tani Herbal Puncu', location: 'Puncu, Kediri' },
+    { name: 'Kunyit Murni Segar 1kg', price: 12000, unit: 'Kg', seller: 'Tani Herbal Puncu', location: 'Puncu, Kediri' },
+    { name: 'Lengkuas Super Puncu 1kg', price: 10000, unit: 'Kg', seller: 'Tani Herbal Puncu', location: 'Puncu, Kediri' },
+    { name: 'Serai Wangi Batang 1kg', price: 9000, unit: 'Kg', seller: 'Tani Kandat', location: 'Kandat, Kediri' },
+    { name: 'Kemiri Kupas Utuh 500g', price: 24000, unit: 'Pack 500g', seller: 'Siti Grosir Kediri', location: 'Kota Kediri' },
+    { name: 'Ketumbar Biji Murni 250g', price: 8500, unit: 'Pack 250g', seller: 'Grosir Dhoho', location: 'Kota Kediri' },
+    { name: 'Lada Putih Bubuk Super 100g', price: 14000, unit: 'Pack 100g', seller: 'Grosir Dhoho', location: 'Kota Kediri' },
+    { name: 'Daun Bawang Segar 500g', price: 9000, unit: 'Ikat 500g', seller: 'Tani Ngancar', location: 'Ngancar, Kediri' },
+    { name: 'Seledri Segar 250g', price: 6000, unit: 'Ikat 250g', seller: 'Tani Ngancar', location: 'Ngancar, Kediri' },
+    { name: 'Kubis Segar Puncu 1kg', price: 7000, unit: 'Kg', seller: 'Tani Puncu', location: 'Puncu, Kediri' },
+    { name: 'Sawi Hijau Caisim 500g', price: 5000, unit: 'Ikat 500g', seller: 'Tani Plosoklaten', location: 'Plosoklaten, Kediri' },
+    { name: 'Wortel Lokal Ngancar 1kg', price: 11000, unit: 'Kg', seller: 'Tani Ngancar', location: 'Ngancar, Kediri' },
+    { name: 'Labu Siam Segar 1kg', price: 6500, unit: 'Kg', seller: 'Pak Sugeng (Poktan Pare)', location: 'Pare, Kediri' },
+    { name: 'Gambas / Oyong Segar 1kg', price: 8500, unit: 'Kg', seller: 'Pak Sugeng (Poktan Pare)', location: 'Pare, Kediri' },
+    { name: 'Jamur Tiram White Fresh 1kg', price: 16000, unit: 'Kg', seller: 'Omah Jamur Mojo', location: 'Mojo, Kediri' }
+  ];
+
+  sayur.forEach((s, idx) => {
+    items.push({
+      id: `prod-${idx + 21}`,
+      name: s.name,
+      category: 'sayur',
+      categoryLabel: 'Sayur & Bumbu',
+      price: s.price,
+      unit: s.unit,
+      seller: s.seller,
+      location: s.location,
+      rating: 4.8,
+      sold: Math.floor(Math.random() * 300) + 50,
+      stock: Math.floor(Math.random() * 50) + 15,
+      description: `Komoditas segar petik pagi dari lahan pertanian ${s.location}. Bebas pestisida berlebih dan dijamin segar.`,
+      image: `https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&auto=format&fit=crop&q=80`
+    });
+  });
+
+  const protein = [
+    { name: 'Telur Ayam Ras Fresh 1kg (16 Butir)', price: 27500, unit: 'Kg', seller: 'Peternakan Pare', location: 'Pare, Kediri' },
+    { name: 'Telur Ayam Kampung Murni 10 Butir', price: 26000, unit: 'Pack 10 Butir', seller: 'Ternak Kandat', location: 'Kandat, Kediri' },
+    { name: 'Telur Bebek Lokal Fresh 10 Butir', price: 28000, unit: 'Pack 10 Butir', seller: 'Ternak Kras', location: 'Kras, Kediri' },
+    { name: 'Daging Sapi Has Dalam Segar 1kg', price: 135000, unit: 'Kg', seller: 'Jaggal Sapi Wates', location: 'Wates, Kediri' },
+    { name: 'Daging Sapi Tetelan Sup 1kg', price: 92000, unit: 'Kg', seller: 'Jaggal Sapi Wates', location: 'Wates, Kediri' },
+    { name: 'Daging Ayam Broiler Utuh 1kg', price: 34000, unit: 'Ekor ~1kg', seller: 'Poultry Shop Kediri', location: 'Kota Kediri' },
+    { name: 'Daging Ayam Kampung Potong 1 Ekor', price: 68000, unit: 'Ekor ~900g', seller: 'Ternak Kandat', location: 'Kandat, Kediri' },
+    { name: 'Daging Kambing Segar Tanpa Tulang 1kg', price: 128000, unit: 'Kg', seller: 'Jaggal Kambing Kandat', location: 'Kandat, Kediri' },
+    { name: 'Ikan Gurame Hidup Size 1kg (2-3 Ekor)', price: 38000, unit: 'Kg', seller: 'Budidaya Fish Mojo', location: 'Mojo, Kediri' },
+    { name: 'Ikan Nila Segar Kolam Air Deras 1kg', price: 29000, unit: 'Kg', seller: 'Budidaya Fish Mojo', location: 'Mojo, Kediri' },
+    { name: 'Ikan Lele Dumbo Segar 1kg', price: 22000, unit: 'Kg', seller: 'Budidaya Lele Kras', location: 'Kras, Kediri' },
+    { name: 'Tahu Murni Kediri Asli (10 Biji)', price: 12000, unit: 'Kotak 10 Biji', seller: 'Pabrik Tahu Bahagia', location: 'Kota Kediri' },
+    { name: 'Tempe Daun Pisang Murni (5 Papan)', price: 10000, unit: 'Pack 5 Papan', seller: 'Pengrajin Tempe Gurah', location: 'Gurah, Kediri' },
+    { name: 'Udang Vaname Segar Size 50 1kg', price: 78000, unit: 'Kg', seller: 'Mitra Bahari Kediri', location: 'Kota Kediri' },
+    { name: 'Cumi-Cumi Segar Wet Market 1kg', price: 82000, unit: 'Kg', seller: 'Mitra Bahari Kediri', location: 'Kota Kediri' },
+    { name: 'Daging Bebek Potong Segar 1 Ekor', price: 55000, unit: 'Ekor', seller: 'Ternak Bebek Kras', location: 'Kras, Kediri' },
+    { name: 'Telur Puyuh Fresh 500g (~45 Butir)', price: 19500, unit: 'Pack 500g', seller: 'Ternak Puyuh Ngadiluwih', location: 'Ngadiluwih, Kediri' },
+    { name: 'Bakso Sapi Asli Kediri 500g', price: 42000, unit: 'Pack 500g', seller: 'Omah Bakso Dhoho', location: 'Kota Kediri' },
+    { name: 'Sosis Sapi Jumbo Agribisnis 500g', price: 36000, unit: 'Pack 500g', seller: 'Tirto Agung Direct', location: 'Semen, Kediri' },
+    { name: 'Hati & Ampela Ayam Segar 1kg', price: 24000, unit: 'Kg', seller: 'Poultry Shop Kediri', location: 'Kota Kediri' }
+  ];
+
+  protein.forEach((s, idx) => {
+    items.push({
+      id: `prod-${idx + 46}`,
+      name: s.name,
+      category: 'protein',
+      categoryLabel: 'Telur, Daging & Protein',
+      price: s.price,
+      unit: s.unit,
+      seller: s.seller,
+      location: s.location,
+      rating: 4.9,
+      sold: Math.floor(Math.random() * 250) + 40,
+      stock: Math.floor(Math.random() * 40) + 10,
+      description: `Produk sumber protein segar dipotong dan dikemas harian dengan higienitas terjamin dari ${s.location}.`,
+      image: `https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=500&auto=format&fit=crop&q=80`
+    });
+  });
+
+  const buahAndTernak = [
+    { name: 'Alpukat Mentega Ngancar Super 1kg', category: 'buah', label: 'Buah Segar', price: 28000, unit: 'Kg', seller: 'Tani Ngancar', location: 'Ngancar, Kediri' },
+    { name: 'Melon Golden Pare Sweet 1kg', category: 'buah', label: 'Buah Segar', price: 18000, unit: 'Kg', seller: 'Pak Sugeng (Poktan Pare)', location: 'Pare, Kediri' },
+    { name: 'Pisang Candi Kediri 1 Sisir', category: 'buah', label: 'Buah Segar', price: 15000, unit: 'Sisir', seller: 'Tani Semen', location: 'Semen, Kediri' },
+    { name: 'Nanas Kelud Manis Super 1 Biji', category: 'buah', label: 'Buah Segar', price: 9000, unit: 'Biji', seller: 'Tani Ngancar', location: 'Ngancar, Kediri' },
+    { name: 'Semangka Merah Non-Biji 1kg', category: 'buah', label: 'Buah Segar', price: 8500, unit: 'Kg', seller: 'Tani Wates', location: 'Wates, Kediri' },
+    { name: 'Salak Pondoh Manis 1kg', category: 'buah', label: 'Buah Segar', price: 11000, unit: 'Kg', seller: 'Tani Puncu', location: 'Puncu, Kediri' },
+    { name: 'Papaya Calina Manis 1kg', category: 'buah', label: 'Buah Segar', price: 7000, unit: 'Kg', seller: 'Tani Plosoklaten', location: 'Plosoklaten, Kediri' },
+    { name: 'Jeruk Keprok Batu Sweet 1kg', category: 'buah', label: 'Buah Segar', price: 22000, unit: 'Kg', seller: 'Tani Puncu', location: 'Puncu, Kediri' },
+    { name: 'Mangga Gadung Kediri Super 1kg', category: 'buah', label: 'Buah Segar', price: 24000, unit: 'Kg', seller: 'Tani Kras', location: 'Kras, Kediri' },
+    { name: 'Buah Naga Merah Ngancar 1kg', category: 'buah', label: 'Buah Segar', price: 16000, unit: 'Kg', seller: 'Tani Ngancar', location: 'Ngancar, Kediri' },
+    { name: 'Durian Kelud Asli Legi 1 Biji', category: 'buah', label: 'Buah Segar', price: 65000, unit: 'Biji ~2kg', seller: 'Kebun Durian Kelud', location: 'Ngancar, Kediri' },
+    { name: 'Jambu Kristal Tanpa Biji 1kg', category: 'buah', label: 'Buah Segar', price: 14000, unit: 'Kg', seller: 'Tani Pare', location: 'Pare, Kediri' },
+    // Ternak
+    { name: 'Sapi Limosin Bakalan Super 350kg', category: 'ternak', label: 'Hewan Ternak', price: 18500000, unit: 'Ekor', seller: 'Ternak Sapi Wates', location: 'Wates, Kediri' },
+    { name: 'Sapi Simental Jantan Gemuk 400kg', category: 'ternak', label: 'Hewan Ternak', price: 21000000, unit: 'Ekor', seller: 'Ternak Sapi Wates', location: 'Wates, Kediri' },
+    { name: 'Kambing PE Etawa Kandat Jantan', category: 'ternak', label: 'Hewan Ternak', price: 3800000, unit: 'Ekor', seller: 'Etawa Farm Kandat', location: 'Kandat, Kediri' },
+    { name: 'Domba Garut Betina Indukan', category: 'ternak', label: 'Hewan Ternak', price: 2400000, unit: 'Ekor', seller: 'Ternak Domba Gurah', location: 'Gurah, Kediri' },
+    { name: 'Bibit Ayam Kampung DOC (Box 100 Ekor)', category: 'ternak', label: 'Hewan Ternak', price: 780000, unit: 'Box (100 ekor)', seller: 'Hatchery Pare', location: 'Pare, Kediri' },
+    { name: 'Bebek Hibrida Siap Telur 10 Ekor', category: 'ternak', label: 'Hewan Ternak', price: 850000, unit: 'Paket 10 Ekor', seller: 'Ternak Kras', location: 'Kras, Kediri' },
+    { name: 'Kambing Jawa Randu Jantan 35kg', category: 'ternak', label: 'Hewan Ternak', price: 2900000, unit: 'Ekor', seller: 'Ternak Kandat', location: 'Kandat, Kediri' },
+    { name: 'Sapi Brahman Cross Super 450kg', category: 'ternak', label: 'Hewan Ternak', price: 23500000, unit: 'Ekor', seller: 'Ternak Sapi Wates', location: 'Wates, Kediri' }
+  ];
+
+  buahAndTernak.forEach((s, idx) => {
+    items.push({
+      id: `prod-${idx + 66}`,
+      name: s.name,
+      category: s.category,
+      categoryLabel: s.label,
+      price: s.price,
+      unit: s.unit,
+      seller: s.seller,
+      location: s.location,
+      rating: 4.9,
+      sold: Math.floor(Math.random() * 80) + 10,
+      stock: s.category === 'ternak' ? Math.floor(Math.random() * 8) + 2 : Math.floor(Math.random() * 40) + 15,
+      description: `Komoditas ${s.name} berkualitas unggul dari kandang/kebun terverifikasi daerah ${s.location}.`,
+      image: s.category === 'buah' 
+        ? `https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=500&auto=format&fit=crop&q=80`
+        : `https://images.unsplash.com/photo-1546445317-29f4545f9d52?w=500&auto=format&fit=crop&q=80`
+    });
+  });
+
+  const inputs = [
+    { name: 'Silase Tebon Jagung Fermentasi 50kg', category: 'pakan', label: 'Pakan Ternak', price: 65000, unit: 'Karung 50kg', seller: 'Silo Pakan Gurah', location: 'Gurah, Kediri' },
+    { name: 'Konsentrat Sapi Perah High Protein 50kg', category: 'pakan', label: 'Pakan Ternak', price: 185000, unit: 'Karung 50kg', seller: 'Tirto Agung Direct', location: 'Semen, Kediri' },
+    { name: 'Pakan Ayam Broiler Starter 50kg', category: 'pakan', label: 'Pakan Ternak', price: 390000, unit: 'Karung 50kg', seller: 'Tirto Agung Direct', location: 'Kota Kediri' },
+    { name: 'Pelet Ikan Floating Hi-Pro 30kg', category: 'pakan', label: 'Pakan Ternak', price: 310000, unit: 'Karung 30kg', seller: 'Tirto Agung Direct', location: 'Mojo, Kediri' },
+    { name: 'Bekatul Halus Super Padi 50kg', category: 'pakan', label: 'Pakan Ternak', price: 140000, unit: 'Karung 50kg', seller: 'Penggilingan Padi Pare', location: 'Pare, Kediri' },
+
+    { name: 'Pupuk NPK Bulk Grosir 1 Ton (Direct)', category: 'pupuk', label: 'Pupuk Bulk', price: 9800000, unit: 'Tonase (1000kg)', seller: 'Tirto Agung Direct', location: 'Semen, Kediri' },
+    { name: 'Pupuk Kompos Organik Fermentasi 25kg', category: 'pupuk', label: 'Pupuk & Nutrisi', price: 32000, unit: 'Karung 25kg', seller: 'Omah Kompos Kras', location: 'Kras, Kediri' },
+    { name: 'Pupuk Urea Non-Subsidi Grade A 50kg', category: 'pupuk', label: 'Pupuk & Nutrisi', price: 340000, unit: 'Karung 50kg', seller: 'Tirto Agung Direct', location: 'Semen, Kediri' },
+    { name: 'Pupuk KCL Canada Impor 50kg', category: 'pupuk', label: 'Pupuk & Nutrisi', price: 480000, unit: 'Karung 50kg', seller: 'Tirto Agung Direct', location: 'Kota Kediri' },
+    { name: 'Benih Jagung Hibrida NK22 Super 1kg', category: 'pupuk', label: 'Pupuk & Benih', price: 98000, unit: 'Pack 1kg', seller: 'Pak Sugeng (Poktan Pare)', location: 'Pare, Kediri' },
+
+    { name: 'Benih Padi Unggul Ciherang Sertifikat 5kg', category: 'pupuk', label: 'Pupuk & Benih', price: 75000, unit: 'Bag 5kg', seller: 'Benih Unggul Pare', location: 'Pare, Kediri' },
+    { name: 'Knapsack Sprayer Elektrik 16 Liter', category: 'alat', label: 'Alat & Mesin Tani', price: 345000, unit: 'Unit', seller: 'Tirto Agung Direct', location: 'Kota Kediri' },
+    { name: 'Mulsa Plastik Hitam Perak 1 Roll (250m)', category: 'alat', label: 'Alat & Mesin Tani', price: 410000, unit: 'Roll', seller: 'Tirto Agung Direct', location: 'Kota Kediri' },
+    { name: 'Cangkul Baja Asli Kediri Gagang Kayu', category: 'alat', label: 'Alat & Mesin Tani', price: 85000, unit: 'Pcs', seller: 'Pandai Besi Pare', location: 'Pare, Kediri' },
+    { name: 'Selang Irigasi Tetes 16mm (100 meter)', category: 'alat', label: 'Alat & Mesin Tani', price: 165000, unit: 'Roll 100m', seller: 'Tirto Agung Direct', location: 'Kota Kediri' }
+  ];
+
+  inputs.forEach((s, idx) => {
+    items.push({
+      id: `prod-${idx + 86}`,
+      name: s.name,
+      category: s.category,
+      categoryLabel: s.label,
+      price: s.price,
+      unit: s.unit,
+      seller: s.seller,
+      location: s.location,
+      rating: 4.9,
+      sold: Math.floor(Math.random() * 190) + 30,
+      stock: Math.floor(Math.random() * 60) + 10,
+      description: `Sarana produksi pertanian ${s.name} original garansi pabrik/mitra terpercaya.`,
+      image: s.category === 'pupuk' 
+        ? `https://images.unsplash.com/photo-1628352081506-83c43123ed6d?w=500&auto=format&fit=crop&q=80`
+        : `https://images.unsplash.com/photo-1592417817098-8f3d6ef23a80?w=500&auto=format&fit=crop&q=80`
+    });
+  });
+
+  return items;
+};
+
+export default function App() {
+  // Accounts State
+  const [accounts, setAccounts] = useState(INITIAL_ACCOUNTS);
+  const [activeAccountId, setActiveAccountId] = useState('rio-kediri');
+
+  // Active User object
+  const currentUser = useMemo(() => {
+    return accounts.find(a => a.id === activeAccountId) || accounts[0];
+  }, [accounts, activeAccountId]);
+
+  // Catalog State
+  const [products, setProducts] = useState(GENERATE_100_ITEMS);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('semua');
+  const [sortOrder, setSortOrder] = useState('populer');
+  const [activeTab, setActiveTab] = useState('katalog'); // 'katalog', 'lapak', 'pesanan', 'pembukuan'
+
+  // Shopping Cart & Order Engine State
+  const [cart, setCart] = useState([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [orders, setOrders] = useState([
+    {
+      id: 'ORD-88219',
+      date: '10 Okt 2026, 09:15 WIB',
+      buyerName: 'Mohammad Rio',
+      buyerLocation: 'Jl. Dhoho No. 45, Kota Kediri',
+      items: [
+        { name: 'Beras Pandan Wangi Super 10kg', price: 155000, qty: 2, unit: 'Karung 10kg', seller: 'Poktan Pare Kediri' },
+        { name: 'Tomat Buah Ngancar Segar 1kg', price: 11000, qty: 3, unit: 'Kg', seller: 'Tani Ngancar' }
+      ],
+      subtotal: 343000,
+      shipping: 15000,
+      serviceFee: 2000,
+      commission: 10290, // 3%
+      total: 360000,
+      status: 'Diproses', // 'Diproses', 'Dalam Pengiriman', 'Selesai'
+      model: 'Marketplace'
+    }
+  ]);
+
+  // Modals & UI States
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState('switch'); // 'switch', 'login', 'register'
+  const [isSellModalOpen, setIsSellModalOpen] = useState(false);
+  const [selectedProductDetail, setSelectedProductDetail] = useState(null);
+  const [invoiceOrder, setInvoiceOrder] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  // Form states
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  
+  // New Product Form state with live card preview
+  const [newProduct, setNewProduct] = useState({
+    name: 'Cabai Rawit Organik Kediri',
+    category: 'sayur',
+    categoryLabel: 'Sayur & Bumbu',
+    price: 36000,
+    unit: 'Kg',
+    stock: 25,
+    location: 'Kota Kediri',
+    description: 'Cabai rawit segar hasil petik langsung dari kebun pekarangan Kediri.',
+    image: 'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=500&auto=format&fit=crop&q=80'
+  });
+
+  const showToast = (title, message) => {
+    setToast({ title, message });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            p.seller.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            p.location.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = categoryFilter === 'semua' || p.category === categoryFilter;
+      return matchesSearch && matchesCategory;
+    }).sort((a, b) => {
+      if (sortOrder === 'harga-rendah') return a.price - b.price;
+      if (sortOrder === 'harga-tinggi') return b.price - a.price;
+      if (sortOrder === 'nama') return a.name.localeCompare(b.name);
+      return b.sold - a.sold; // default populer
+    });
+  }, [products, searchQuery, categoryFilter, sortOrder]);
+
+  // User's own commodities list
+  const userCommodities = useMemo(() => {
+    return products.filter(p => p.seller.toLowerCase().includes(currentUser.name.toLowerCase()));
+  }, [products, currentUser]);
+
+  const addToCart = (product) => {
+    if (product.stock <= 0) {
+      showToast('Stok Habis', 'Maaf, stok komoditas ini sedang tidak tersedia.');
+      return;
+    }
+
+    setCart(prev => {
+      const existing = prev.find(item => item.product.id === product.id);
+      if (existing) {
+        if (existing.qty >= product.stock) {
+          showToast('Batas Stok', `Maksimum stok tersedia: ${product.stock} ${product.unit}`);
+          return prev;
+        }
+        return prev.map(item => item.product.id === product.id ? { ...item, qty: item.qty + 1 } : item);
+      }
+      return [...prev, { product, qty: 1 }];
+    });
+
+    showToast('Masuk Keranjang', `${product.name} telah ditambahkan ke keranjang.`);
+  };
+
+  const updateCartQty = (productId, delta) => {
+    setCart(prev => prev.map(item => {
+      if (item.product.id === productId) {
+        const newQty = item.qty + delta;
+        if (newQty <= 0) return null;
+        if (newQty > item.product.stock) {
+          showToast('Batas Stok', `Stok tersedia hanya ${item.product.stock}`);
+          return item;
+        }
+        return { ...item, qty: newQty };
+      }
+      return item;
+    }).filter(Boolean));
+  };
+
+  const cartTotal = useMemo(() => {
+    return cart.reduce((sum, item) => sum + (item.product.price * item.qty), 0);
+  }, [cart]);
+
+  const handleCheckout = () => {
+    if (cart.length === 0) return;
+
+    const subtotal = cartTotal;
+    const shipping = 15000;
+    const serviceFee = 2000;
+    const commission = currentUser.model === 'Distributor' ? 0 : Math.round(subtotal * 0.03);
+    const total = subtotal + shipping + serviceFee;
+
+    const newOrder = {
+      id: `ORD-${Math.floor(10000 + Math.random() * 90000)}`,
+      date: new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) + ' WIB',
+      buyerName: currentUser.name,
+      buyerLocation: currentUser.location,
+      items: cart.map(c => ({
+        name: c.product.name,
+        price: c.product.price,
+        qty: c.qty,
+        unit: c.product.unit,
+        seller: c.product.seller
+      })),
+      subtotal,
+      shipping,
+      serviceFee,
+      commission,
+      total,
+      status: 'Diproses',
+      model: currentUser.model
+    };
+
+    // Deduct stock
+    setProducts(prev => prev.map(p => {
+      const cartItem = cart.find(c => c.product.id === p.id);
+      if (cartItem) {
+        return { ...p, stock: Math.max(0, p.stock - cartItem.qty), sold: p.sold + cartItem.qty };
+      }
+      return p;
+    }));
+
+    setOrders(prev => [newOrder, ...prev]);
+    setCart([]);
+    setIsCartOpen(false);
+    showToast('Pesanan Dibuat!', `Pesanan ${newOrder.id} berhasil dibuat.`);
+  };
+
+  const handlePublishProduct = (e) => {
+    e.preventDefault();
+    if (!newProduct.name || !newProduct.price) return;
+
+    const createdProduct = {
+      id: `user-prod-${Date.now()}`,
+      name: newProduct.name,
+      category: newProduct.category,
+      categoryLabel: newProduct.category === 'sayur' ? 'Sayur & Bumbu' : 'Hasil Agribisnis',
+      price: Number(newProduct.price),
+      unit: newProduct.unit,
+      seller: `${currentUser.name} (Lapak Anda)`,
+      location: newProduct.location || currentUser.location,
+      rating: 5.0,
+      sold: 0,
+      stock: Number(newProduct.stock) || 10,
+      description: newProduct.description,
+      image: newProduct.image
+    };
+
+    setProducts(prev => [createdProduct, ...prev]);
+    setIsSellModalOpen(false);
+    showToast('Komoditas Diterbitkan!', `${createdProduct.name} sekarang aktif di katalog.`);
+  };
+
+  const handleSwitchAccount = (accId) => {
+    setActiveAccountId(accId);
+    setIsAuthModalOpen(false);
+    const target = accounts.find(a => a.id === accId);
+    if (target) {
+      showToast('Ganti Akun Berhasil', `Sekarang Anda masuk sebagai ${target.name} (${target.role})`);
+    }
+  };
+
+  const handleManualLogin = (e) => {
+    e.preventDefault();
+    if (!loginEmail) return;
+
+    const newAcc = {
+      id: `user-${Date.now()}`,
+      name: loginEmail.split('@')[0].toUpperCase(),
+      role: 'Pembeli',
+      roleBadge: 'Pengguna Terdaftar',
+      email: loginEmail,
+      phone: '0812-0000-1111',
+      location: 'Kota Kediri dan Sekitarnya',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+      isVerified: true,
+      balance: 5000000,
+      model: 'Marketplace'
+    };
+
+    setAccounts(prev => [...prev, newAcc]);
+    setActiveAccountId(newAcc.id);
+    setIsAuthModalOpen(false);
+    setLoginEmail('');
+    setLoginPassword('');
+    showToast('Masuk Berhasil', `Selamat datang kembali, ${newAcc.name}!`);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans pb-20 md:pb-6">
+
+      {}
+      <header className="sticky top-0 z-40 bg-slate-900 text-white border-b border-slate-800 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+          
+          {/* Modern Geometric Logo (Green + Blue Gradient, No Gold) */}
+          <div className="flex items-center gap-3 cursor-pointer select-none" onClick={() => setActiveTab('katalog')}>
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 via-sky-500 to-blue-600 p-0.5 shadow-md shadow-emerald-500/20">
+              <div className="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center">
+                <svg className="w-6 h-6 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  {/* Leaf & Water drop node geometry */}
+                  <path d="M12 2C6.5 2 2 6.5 2 12c0 3.5 2 6.5 5 8" />
+                  <path d="M12 2c5.5 0 10 4.5 10 10 0 3.5-2 6.5-5 8" />
+                  <path d="M12 22V10" />
+                  <circle cx="12" cy="7" r="2" fill="#0ea5e9" />
+                </svg>
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <h1 className="font-extrabold text-base tracking-tight text-white leading-none">TIRTO AGUNG</h1>
+                <span className="text-[10px] bg-sky-500/20 text-sky-400 font-bold px-1.5 py-0.5 rounded border border-sky-500/30">AGRITECH</span>
+              </div>
+              <p className="text-[11px] text-emerald-400 font-medium tracking-wide">Agrimarket Kediri & Sekitarnya</p>
+            </div>
+          </div>
+
+          {/* Desktop Search Bar */}
+          <div className="hidden md:flex flex-1 max-w-md relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari beras, cabai, pupuk bulk, sapi limosin..."
+              className="w-full pl-10 pr-4 py-2 text-xs bg-slate-800 text-slate-100 border border-slate-700 rounded-full focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 placeholder-slate-400 transition"
+            />
+            <Search className="w-4 h-4 absolute left-3.5 top-2.5 text-slate-400" />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-2.5 text-slate-400 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Action Buttons & Profile Switcher */}
+          <div className="flex items-center gap-3">
+            
+            {/* Mau Jual Button */}
+            <button
+              onClick={() => setIsSellModalOpen(true)}
+              className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-xs rounded-xl shadow-sm transition"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Mau Jual</span>
+            </button>
+
+            {/* Shopping Cart Button */}
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition border border-slate-700"
+            >
+              <ShoppingBag className="w-5 h-5 text-emerald-400" />
+              {cart.length > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-sky-500 text-white font-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-slate-900 shadow">
+                  {cart.reduce((s, i) => s + i.qty, 0)}
+                </span>
+              )}
+            </button>
+
+            {/* User Active Profile Pill & Account Switcher Toggle */}
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="flex items-center gap-2.5 p-1.5 pl-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl transition text-left"
+            >
+              <div className="hidden sm:block text-right">
+                <div className="flex items-center justify-end gap-1">
+                  <span className="text-xs font-bold text-white leading-tight">{currentUser.name}</span>
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                </div>
+                <span className="text-[10px] text-sky-400 font-medium block leading-tight">{currentUser.location}</span>
+              </div>
+              <img src={currentUser.avatar} alt={currentUser.name} className="w-8 h-8 rounded-full object-cover border border-emerald-500/50" />
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            </button>
+
+          </div>
+
+        </div>
+      </header>
+
+      {}
+      <div className="bg-slate-900 border-b border-slate-800 text-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-4 overflow-x-auto no-scrollbar">
+          
+          <div className="flex items-center gap-2 whitespace-nowrap">
+            <span className="text-slate-400 font-medium flex items-center gap-1">
+              <UserCheck className="w-3.5 h-3.5 text-emerald-400" /> Akun Aktif:
+            </span>
+            <span className="font-bold text-white">{currentUser.name}</span>
+            <span className="bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full text-[10px] border border-emerald-500/30">
+              {currentUser.roleBadge}
+            </span>
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="text-sky-400 hover:text-sky-300 font-bold ml-2 underline underline-offset-2 flex items-center gap-1"
+            >
+              <RefreshCw className="w-3 h-3" /> Ganti / Masuk Akun
+            </button>
+          </div>
+
+          <div className="hidden md:flex items-center gap-6 whitespace-nowrap text-slate-300 font-medium">
+            <span className="text-emerald-400">Model: {currentUser.model}</span>
+            <span>Saldo: Rp {currentUser.balance.toLocaleString('id-ID')}</span>
+            <span className="text-sky-400">Wilayah: Kediri & Sekitarnya</span>
+          </div>
+
+        </div>
+      </div>
+
+      {}
+      <div className="bg-white border-b border-slate-200 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 py-2 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('katalog')}
+            className={`px-4 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'katalog' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Store className="w-4 h-4" /> Katalog 100 Komoditas
+          </button>
+          <button
+            onClick={() => setActiveTab('lapak')}
+            className={`px-4 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'lapak' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Tag className="w-4 h-4" /> Lapak Saya ({userCommodities.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('pesanan')}
+            className={`px-4 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'pesanan' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Package className="w-4 h-4" /> Pesanan & Escrow ({orders.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('pembukuan')}
+            className={`px-4 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'pembukuan' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <TrendingUp className="w-4 h-4" /> Pembukuan (Marketplace vs Distributor)
+          </button>
+        </div>
+      </div>
+
+      {}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        {/* TAB 1: KATALOG 100 KOMODITAS */}
+        {activeTab === 'katalog' && (
+          <div className="space-y-6">
+            
+            {/* Hero Agri Banner */}
+            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-slate-900 via-emerald-950 to-sky-950 text-white p-6 md:p-8 shadow-xl border border-slate-800">
+              <div className="max-w-2xl relative z-10 space-y-3">
+                <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-300 font-semibold text-xs px-3 py-1 rounded-full border border-emerald-500/30">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Agrimarket Digital Kediri & Sekitarnya
+                </div>
+                <h2 className="text-2xl md:text-3xl font-black tracking-tight leading-tight">
+                  Pasar Komoditas Tani, Pangan Pokok & Sarana Agribisnis Terpadu
+                </h2>
+                <p className="text-slate-300 text-xs md:text-sm leading-relaxed">
+                  Beli langsung dari kelompok tani Pare, Ngancar, Kras, hingga distributor B2B. Lengkap dengan komisi transparan & proteksi dana escrow.
+                </p>
+                <div className="flex flex-wrap items-center gap-3 pt-2">
+                  <button
+                    onClick={() => setIsSellModalOpen(true)}
+                    className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl transition shadow flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" /> Mulai Jual Komoditas
+                  </button>
+                  <button
+                    onClick={() => setIsAuthModalOpen(true)}
+                    className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition flex items-center gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4 text-sky-400" /> Ganti Akun Pengguna
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Category Filter Chips */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-emerald-600" /> Kategori Komoditas (100 Item)
+                </h3>
+                <span className="text-xs text-slate-500 font-medium">Menampilkan {filteredProducts.length} Produk</span>
+              </div>
+
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+                {[
+                  { id: 'semua', label: 'Semua Produk (100)' },
+                  { id: 'sembako', label: 'Beras & Sembako' },
+                  { id: 'sayur', label: 'Sayur & Bumbu' },
+                  { id: 'protein', label: 'Telur & Daging' },
+                  { id: 'buah', label: 'Buah Segar' },
+                  { id: 'ternak', label: 'Hewan Ternak' },
+                  { id: 'pakan', label: 'Pakan Ternak' },
+                  { id: 'pupuk', label: 'Pupuk & Benih' },
+                  { id: 'alat', label: 'Alat & Mesin Tani' }
+                ].map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setCategoryFilter(cat.id)}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                      categoryFilter === cat.id
+                        ? 'bg-slate-900 text-emerald-400 shadow-sm border border-slate-800'
+                        : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sorting & Search Control */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200">
+              <div className="text-xs font-semibold text-slate-600 flex items-center gap-2">
+                <span>Filter Wilayah: <strong className="text-slate-900">Kediri, Nganjuk, Blitar & Sekitarnya</strong></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500 font-medium">Urutkan:</span>
+                <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value)}
+                  className="text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                >
+                  <option value="populer">Paling Laris</option>
+                  <option value="harga-rendah">Harga Terendah</option>
+                  <option value="harga-tinggi">Harga Tertinggi</option>
+                  <option value="nama">Nama (A-Z)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Products Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+              {filteredProducts.map(product => (
+                <div
+                  key={product.id}
+                  className="bg-white rounded-2xl overflow-hidden border border-slate-200 hover:border-emerald-400 hover:shadow-md transition group flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="relative h-36 sm:h-40 bg-slate-100 overflow-hidden">
+                      <SafeImage
+                        src={product.image}
+                        alt={product.name}
+                        category={product.category}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                      />
+                      <span className="absolute top-2 left-2 bg-slate-900/80 backdrop-blur-xs text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
+                        {product.categoryLabel}
+                      </span>
+                      {product.stock <= 5 && (
+                        <span className="absolute bottom-2 right-2 bg-rose-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                          Stok {product.stock}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-3 space-y-1.5">
+                      <div className="flex items-center gap-1 text-[10px] text-slate-400">
+                        <MapPin className="w-3 h-3 text-sky-500 shrink-0" />
+                        <span className="truncate">{product.location}</span>
+                      </div>
+
+                      <h4
+                        onClick={() => setSelectedProductDetail(product)}
+                        className="text-xs font-bold text-slate-900 line-clamp-2 hover:text-emerald-600 cursor-pointer leading-snug"
+                      >
+                        {product.name}
+                      </h4>
+
+                      <p className="text-[10px] text-slate-500 truncate">Lapak: {product.seller}</p>
+
+                      <div className="pt-1 flex items-baseline justify-between">
+                        <div>
+                          <p className="text-xs sm:text-sm font-extrabold text-slate-900">
+                            Rp {product.price.toLocaleString('id-ID')}
+                          </p>
+                          <span className="text-[10px] text-slate-400">/ {product.unit}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 pt-0">
+                    <button
+                      onClick={() => addToCart(product)}
+                      disabled={product.stock <= 0}
+                      className={`w-full py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                        product.stock <= 0
+                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 hover:border-emerald-600'
+                      }`}
+                    >
+                      <ShoppingCart className="w-3.5 h-3.5" />
+                      {product.stock <= 0 ? 'Habis' : '+ Beli'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        )}
+
+        {}
+        {activeTab === 'lapak' && (
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <img src={currentUser.avatar} className="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-500" />
+                <div>
+                  <h3 className="font-extrabold text-lg text-slate-900">{currentUser.name}</h3>
+                  <p className="text-xs text-slate-500">{currentUser.location} • {currentUser.email}</p>
+                  <span className="inline-block mt-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    {currentUser.roleBadge}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsSellModalOpen(true)}
+                className="w-full sm:w-auto px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-2xl shadow transition flex items-center justify-center gap-2"
+              >
+                <Plus className="w-4 h-4" /> Tambah Komoditas Baru
+              </button>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-base text-slate-900 mb-3">Daftar Komoditas yang Didaftarkan ({userCommodities.length})</h4>
+              
+              {userCommodities.length === 0 ? (
+                <div className="bg-white p-12 text-center rounded-3xl border border-slate-200 space-y-3">
+                  <Store className="w-12 h-12 text-slate-300 mx-auto" />
+                  <p className="text-sm font-bold text-slate-700">Belum ada komoditas di lapak Anda.</p>
+                  <p className="text-xs text-slate-400">Klik "+ Mau Jual" untuk mulai memasarkan komoditas pertanian Anda ke wilayah Kediri.</p>
+                  <button
+                    onClick={() => setIsSellModalOpen(true)}
+                    className="px-4 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl"
+                  >
+                    + Jual Sekarang
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {userCommodities.map(p => (
+                    <div key={p.id} className="bg-white p-4 rounded-2xl border border-slate-200 flex items-center gap-4">
+                      <SafeImage src={p.image} category={p.category} className="w-20 h-20 rounded-xl object-cover" />
+                      <div className="flex-1 min-w-0">
+                        <h5 className="font-bold text-xs text-slate-900 truncate">{p.name}</h5>
+                        <p className="text-xs font-extrabold text-emerald-700">Rp {p.price.toLocaleString('id-ID')} / {p.unit}</p>
+                        <p className="text-[10px] text-slate-400 mt-1">Stok: {p.stock} • Terjual: {p.sold}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {}
+        {activeTab === 'pesanan' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-lg text-slate-900">Riwayat Pesanan & Proteksi Escrow</h3>
+                <p className="text-xs text-slate-500">Seluruh transaksi dilindungi dengan penahanan dana escrow hingga barang diterima.</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {orders.map(order => (
+                <div key={order.id} className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Package className="w-5 h-5 text-emerald-600" />
+                      <span className="font-extrabold text-xs text-slate-900">{order.id}</span>
+                      <span className="text-xs text-slate-400">• {order.date}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="bg-sky-50 text-sky-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-sky-200">
+                        Model: {order.model}
+                      </span>
+                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-1 rounded-full">
+                        Status: {order.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {order.items.map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-xs">
+                        <div>
+                          <p className="font-bold text-slate-800">{item.name}</p>
+                          <span className="text-[10px] text-slate-400">Pemasok: {item.seller} • {item.qty} {item.unit}</span>
+                        </div>
+                        <p className="font-bold text-slate-900">Rp {(item.price * item.qty).toLocaleString('id-ID')}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] text-slate-400">Pembeli: {order.buyerName}</p>
+                      <p className="text-xs font-black text-slate-900">Total: Rp {order.total.toLocaleString('id-ID')}</p>
+                    </div>
+
+                    <button
+                      onClick={() => setInvoiceOrder(order)}
+                      className="px-3.5 py-2 bg-slate-900 text-white font-bold text-xs rounded-xl hover:bg-slate-800 transition flex items-center gap-1.5"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-emerald-400" /> Lihat Invoice Digital
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {}
+        {activeTab === 'pembukuan' && (
+          <div className="space-y-6">
+            <div className="bg-slate-900 text-white p-6 rounded-3xl space-y-4">
+              <h3 className="font-black text-lg text-emerald-400">Sistem Akuntansi Ganda TIRTO AGUNG AGRIMARKET</h3>
+              <p className="text-xs text-slate-300 leading-relaxed max-w-3xl">
+                Memisahkan secara ketat model transaksi **Marketplace P2P** (Hanya mengakui Komisi & Biaya Layanan sebagai pendapatan platform) dan model **Distributor Direct / B2B Bulk** (Mencatat Nilai Penjualan Bruto, HPP / COGS, Persediaan & Laba Kotor).
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Marketplace Accounting Card */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200 space-y-4 shadow-xs">
+                <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm border-b border-slate-100 pb-3">
+                  <Coins className="w-5 h-5 text-emerald-600" /> Model 1: Marketplace P2P (Komisi 3%)
+                </div>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between py-1 border-b border-slate-50">
+                    <span className="text-slate-500">Volume Transaksi Bruto (GMV):</span>
+                    <span className="font-bold text-slate-800">Rp 128.500.000</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-50">
+                    <span className="text-slate-500">Pendapatan Komisi Platform (3%):</span>
+                    <span className="font-bold text-emerald-600">Rp 3.855.000</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-50">
+                    <span className="text-slate-500">Biaya Layanan Aplikasi:</span>
+                    <span className="font-bold text-emerald-600">Rp 840.000</span>
+                  </div>
+                  <div className="flex justify-between py-1 font-bold text-slate-900 pt-2 text-sm">
+                    <span>Total Pendapatan Platform:</span>
+                    <span className="text-emerald-700">Rp 4.695.000</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Distributor Direct Accounting Card */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200 space-y-4 shadow-xs">
+                <div className="flex items-center gap-2 text-sky-700 font-bold text-sm border-b border-slate-100 pb-3">
+                  <TrendingUp className="w-5 h-5 text-sky-600" /> Model 2: Distributor Direct / B2B Bulk
+                </div>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between py-1 border-b border-slate-50">
+                    <span className="text-slate-500">Penjualan Bruto B2B:</span>
+                    <span className="font-bold text-slate-800">Rp 450.000.000</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-50">
+                    <span className="text-slate-500">Harga Pokok Penjualan (HPP / COGS):</span>
+                    <span className="font-bold text-rose-600">- Rp 382.500.000</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-50">
+                    <span className="text-slate-500">Nilai Persediaan Gudang:</span>
+                    <span className="font-bold text-slate-800">Rp 195.000.000</span>
+                  </div>
+                  <div className="flex justify-between py-1 font-bold text-slate-900 pt-2 text-sm">
+                    <span>Laba Kotor Distributor:</span>
+                    <span className="text-sky-700">Rp 67.500.000</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+      </main>
+
+      {}
+      {isAuthModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200">
+            
+            {/* Modal Header */}
+            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-400 to-sky-500 flex items-center justify-center text-slate-950 font-bold">
+                  <User className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base">Sistem Otentikasi & Akun</h3>
+                  <p className="text-xs text-slate-400">Ganti atau masuk ke akun pengguna</p>
+                </div>
+              </div>
+              <button onClick={() => setIsAuthModalOpen(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Tabs */}
+            <div className="flex border-b border-slate-200 bg-slate-50">
+              <button
+                onClick={() => setAuthModalTab('switch')}
+                className={`flex-1 py-3 text-xs font-bold transition ${
+                  authModalTab === 'switch' ? 'bg-white text-emerald-700 border-b-2 border-emerald-600' : 'text-slate-500'
+                }`}
+              >
+                Ganti Akun Demo
+              </button>
+              <button
+                onClick={() => setAuthModalTab('login')}
+                className={`flex-1 py-3 text-xs font-bold transition ${
+                  authModalTab === 'login' ? 'bg-white text-emerald-700 border-b-2 border-emerald-600' : 'text-slate-500'
+                }`}
+              >
+                Masuk Manual
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 space-y-4 max-h-[420px] overflow-y-auto">
+              
+              {authModalTab === 'switch' && (
+                <div className="space-y-3">
+                  <p className="text-xs text-slate-500 font-medium">Pilih salah satu profil untuk pengujian peran (RBAC):</p>
+                  
+                  {accounts.map(acc => {
+                    const isActive = acc.id === currentUser.id;
+                    return (
+                      <div
+                        key={acc.id}
+                        onClick={() => handleSwitchAccount(acc.id)}
+                        className={`p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+                          isActive
+                            ? 'bg-emerald-50 border-emerald-500 shadow-xs'
+                            : 'bg-white border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <img src={acc.avatar} className="w-10 h-10 rounded-full object-cover border border-slate-200" />
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <h4 className="font-bold text-xs text-slate-900">{acc.name}</h4>
+                              {isActive && <span className="bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded">AKTIF</span>}
+                            </div>
+                            <p className="text-[11px] text-slate-500">{acc.role} • {acc.location}</p>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-slate-300" />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {authModalTab === 'login' && (
+                <form onSubmit={handleManualLogin} className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Email Pengguna</label>
+                    <input
+                      type="email"
+                      required
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      placeholder="contoh: mohammad.rio@kediri.id"
+                      className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Kata Sandi</label>
+                    <input
+                      type="password"
+                      required
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow"
+                  >
+                    Masuk ke Tirto Agung
+                  </button>
+                </form>
+              )}
+
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {}
+      {isSellModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 flex flex-col">
+            
+            <div className="p-5 bg-slate-900 text-white flex items-center justify-between sticky top-0 z-10">
+              <div className="flex items-center gap-2">
+                <Plus className="w-5 h-5 text-emerald-400" />
+                <h3 className="font-extrabold text-base">Daftarkan Komoditas Baru ("+ Mau Jual")</h3>
+              </div>
+              <button onClick={() => setIsSellModalOpen(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Form Input */}
+              <form onSubmit={handlePublishProduct} className="space-y-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">Nama Komoditas / Barang</label>
+                  <input
+                    type="text"
+                    required
+                    value={newProduct.name}
+                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Kategori</label>
+                    <select
+                      value={newProduct.category}
+                      onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl font-bold"
+                    >
+                      <option value="sembako">Beras & Sembako</option>
+                      <option value="sayur">Sayur & Bumbu</option>
+                      <option value="protein">Telur & Daging</option>
+                      <option value="buah">Buah Segar</option>
+                      <option value="ternak">Hewan Ternak</option>
+                      <option value="pakan">Pakan Ternak</option>
+                      <option value="pupuk">Pupuk & Benih</option>
+                      <option value="alat">Alat & Mesin</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Satuan</label>
+                    <input
+                      type="text"
+                      required
+                      value={newProduct.unit}
+                      onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })}
+                      placeholder="Kg / Karung / Unit"
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Harga (Rp)</label>
+                    <input
+                      type="number"
+                      required
+                      value={newProduct.price}
+                      onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Stok Awal</label>
+                    <input
+                      type="number"
+                      required
+                      value={newProduct.stock}
+                      onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">Lokasi Wilayah</label>
+                  <input
+                    type="text"
+                    value={newProduct.location}
+                    onChange={(e) => setNewProduct({ ...newProduct, location: e.target.value })}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">URL Foto Komoditas</label>
+                  <input
+                    type="url"
+                    value={newProduct.image}
+                    onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow transition mt-2"
+                >
+                  Terbitkan Jualan Sekarang
+                </button>
+              </form>
+
+              {/* Live Card Preview */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-slate-500 block">Pratinjau Card Real-time:</span>
+                
+                <div className="bg-white rounded-2xl overflow-hidden border-2 border-dashed border-emerald-400 p-2 shadow-xs">
+                  <div className="relative h-36 rounded-xl overflow-hidden bg-slate-100">
+                    <SafeImage src={newProduct.image} category={newProduct.category} className="w-full h-full object-cover" />
+                    <span className="absolute top-2 left-2 bg-slate-900/80 text-emerald-300 text-[9px] font-bold px-2 py-0.5 rounded-full">
+                      {newProduct.category}
+                    </span>
+                  </div>
+                  <div className="p-2 space-y-1">
+                    <p className="text-[10px] text-slate-400">{newProduct.location || currentUser.location}</p>
+                    <h5 className="font-bold text-xs text-slate-900">{newProduct.name || 'Nama Komoditas'}</h5>
+                    <p className="text-[10px] text-slate-500">Lapak: {currentUser.name}</p>
+                    <p className="text-sm font-extrabold text-slate-900">
+                      Rp {Number(newProduct.price || 0).toLocaleString('id-ID')} / {newProduct.unit}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex justify-end">
+          <div className="bg-white w-full max-w-md h-full flex flex-col shadow-2xl">
+            
+            <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5 text-emerald-400" />
+                <h3 className="font-bold text-base">Keranjang Belanja</h3>
+              </div>
+              <button onClick={() => setIsCartOpen(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {cart.length === 0 ? (
+                <div className="text-center py-16 text-slate-400 space-y-2">
+                  <ShoppingCart className="w-12 h-12 mx-auto text-slate-300" />
+                  <p className="text-xs font-bold">Keranjang Anda masih kosong.</p>
+                </div>
+              ) : (
+                cart.map((item) => (
+                  <div key={item.product.id} className="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex items-center gap-3">
+                    <SafeImage src={item.product.image} category={item.product.category} className="w-14 h-14 rounded-xl object-cover" />
+                    <div className="flex-1 min-w-0">
+                      <h5 className="font-bold text-xs text-slate-900 truncate">{item.product.name}</h5>
+                      <p className="text-xs font-black text-emerald-700">Rp {item.product.price.toLocaleString('id-ID')} / {item.product.unit}</p>
+                      
+                      <div className="flex items-center gap-2 mt-2">
+                        <button onClick={() => updateCartQty(item.product.id, -1)} className="w-6 h-6 rounded bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center">-</button>
+                        <span className="text-xs font-bold w-6 text-center">{item.qty}</span>
+                        <button onClick={() => updateCartQty(item.product.id, 1)} className="w-6 h-6 rounded bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center">+</button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {cart.length > 0 && (
+              <div className="p-4 border-t border-slate-200 bg-slate-50 space-y-3">
+                <div className="flex justify-between text-xs text-slate-600">
+                  <span>Subtotal Komoditas:</span>
+                  <span className="font-bold text-slate-900">Rp {cartTotal.toLocaleString('id-ID')}</span>
+                </div>
+                <div className="flex justify-between text-xs text-slate-600">
+                  <span>Ongkos Kirim Wilayah Kediri:</span>
+                  <span className="font-bold text-slate-900">Rp 15.000</span>
+                </div>
+                <div className="flex justify-between text-sm font-black text-slate-900 pt-2 border-t border-slate-200">
+                  <span>Total Tagihan:</span>
+                  <span className="text-emerald-700">Rp {(cartTotal + 15000 + 2000).toLocaleString('id-ID')}</span>
+                </div>
+
+                <button
+                  onClick={handleCheckout}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow transition"
+                >
+                  Proses Pembuatan Pesanan
+                </button>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
+
+      {}
+      {invoiceOrder && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 border border-slate-200 shadow-2xl">
+            
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <FileText className="w-6 h-6 text-emerald-600" />
+                <h3 className="font-extrabold text-base text-slate-900">Invoice Resmi Tirto Agung</h3>
+              </div>
+              <button onClick={() => setInvoiceOrder(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Nomor Pesanan:</span>
+                <span className="font-bold text-slate-800">{invoiceOrder.id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Tanggal Transaksi:</span>
+                <span className="font-bold text-slate-800">{invoiceOrder.date}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Pembeli:</span>
+                <span className="font-bold text-slate-800">{invoiceOrder.buyerName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Model Pembukuan:</span>
+                <span className="font-bold text-sky-600">{invoiceOrder.model}</span>
+              </div>
+            </div>
+
+            <div className="border border-slate-200 rounded-2xl p-3 space-y-2">
+              <span className="text-[11px] font-bold text-slate-500">Rincian Barang:</span>
+              {invoiceOrder.items.map((it, idx) => (
+                <div key={idx} className="flex justify-between text-xs">
+                  <span className="text-slate-800 font-medium">{it.name} x{it.qty}</span>
+                  <span className="font-bold text-slate-900">Rp {(it.price * it.qty).toLocaleString('id-ID')}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-1 text-xs pt-2 border-t border-slate-100">
+              <div className="flex justify-between text-slate-600">
+                <span>Subtotal:</span>
+                <span>Rp {invoiceOrder.subtotal.toLocaleString('id-ID')}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>Ongkir Kediri:</span>
+                <span>Rp {invoiceOrder.shipping.toLocaleString('id-ID')}</span>
+              </div>
+              <div className="flex justify-between font-black text-sm text-slate-900 pt-1">
+                <span>Total Lunas:</span>
+                <span className="text-emerald-700">Rp {invoiceOrder.total.toLocaleString('id-ID')}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => window.print()}
+              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2"
+            >
+              <Printer className="w-4 h-4 text-emerald-400" /> Cetak Dokumen Invoice
+            </button>
+
+          </div>
+        </div>
+      )}
+
+      {}
+      {toast && (
+        <div className="fixed bottom-20 md:bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-slate-800">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+          <div>
+            <h5 className="font-bold text-xs text-white">{toast.title}</h5>
+            <p className="text-[11px] text-slate-300">{toast.message}</p>
+          </div>
+        </div>
+      )}
+
+      {}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 z-40 px-4 py-2 flex items-center justify-around text-slate-400">
+        <button
+          onClick={() => setActiveTab('katalog')}
+          className={`flex flex-col items-center gap-1 text-[10px] font-bold ${
+            activeTab === 'katalog' ? 'text-emerald-400' : ''
+          }`}
+        >
+          <Store className="w-5 h-5" /> Katalog
+        </button>
+        <button
+          onClick={() => setActiveTab('lapak')}
+          className={`flex flex-col items-center gap-1 text-[10px] font-bold ${
+            activeTab === 'lapak' ? 'text-emerald-400' : ''
+          }`}
+        >
+          <Tag className="w-5 h-5" /> Lapak
+        </button>
+        <button
+          onClick={() => setIsSellModalOpen(true)}
+          className="flex flex-col items-center justify-center w-10 h-10 rounded-full bg-emerald-500 text-slate-950 font-bold shadow-lg"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+        <button
+          onClick={() => setActiveTab('pesanan')}
+          className={`flex flex-col items-center gap-1 text-[10px] font-bold ${
+            activeTab === 'pesanan' ? 'text-emerald-400' : ''
+          }`}
+        >
+          <Package className="w-5 h-5" /> Pesanan
+        </button>
+        <button
+          onClick={() => setIsAuthModalOpen(true)}
+          className="flex flex-col items-center gap-1 text-[10px] font-bold"
+        >
+          <User className="w-5 h-5" /> Akun
+        </button>
+      </div>
+
+    </div>
+  );
+}
